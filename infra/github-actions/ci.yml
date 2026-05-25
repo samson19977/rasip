@@ -1,0 +1,78 @@
+name: RASIP CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Backend Tests ──
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rasip_test
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/rasip_test
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/rasip_test
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret
+          ALLOWED_ORIGINS: "http://localhost:3000"
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short
+
+  # ── Frontend Build ──
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: Install & build
+        run: |
+          cd frontend
+          npm ci
+          NEXT_PUBLIC_API_URL=https://rasip-backend.onrender.com npm run build
+
+  # ── Deploy to Render (backend) & Vercel (frontend) ──
+  deploy:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy backend to Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+      - name: Deploy frontend to Vercel
+        run: |
+          npx vercel --token "${{ secrets.VERCEL_TOKEN }}" --prod
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
