@@ -4,20 +4,17 @@ uvicorn[standard]==0.29.0
 
 # ── Database — NeonDB (PostgreSQL) ──────────────────────────────
 sqlalchemy==2.0.30
-asyncpg==0.29.0           # async driver (used by FastAPI)
-psycopg2-binary==2.9.9    # sync driver (used by Alembic + seed script)
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
 alembic==1.13.1
 
-# ── Pydantic ────────────────────────────────────────────────────
+# ── Pydantic ─────────────────────────────────────────────────────
 pydantic==2.7.1
 pydantic-settings==2.2.1
 
-# ── ML ───────────────────────────────────────────────────────────
+# ── ML (lightweight — no pandas/numpy compile issues) ───────────
 numpy==1.26.4
-pandas==2.2.2
 scikit-learn==1.4.2
-xgboost==2.0.3
-shap==0.45.0
 joblib==1.4.2
 
 # ── Utilities ────────────────────────────────────────────────────
@@ -26,6 +23,3 @@ python-dotenv==1.0.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
-
-# ── Optional: Redis cache (Upstash free) ─────────────────────────
-redis==5.0.4
