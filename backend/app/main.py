@@ -5,10 +5,12 @@ from app.api.v1.endpoints import districts, predictions, similarity, climate, fo
 from app.db.database import init_db
 from app.core.config import settings
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     yield
+
 
 app = FastAPI(
     title="RASIP — Rwanda Agricultural Spatial Intelligence Platform",
@@ -19,7 +21,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.allowed_origins_list,   # uses the property
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,9 +34,11 @@ app.include_router(climate.router,     prefix="/api/v1/climate",     tags=["Clim
 app.include_router(forecast.router,    prefix="/api/v1/forecast",    tags=["Forecast"])
 app.include_router(models.router,      prefix="/api/v1/models",      tags=["Models"])
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "platform": "RASIP", "version": "2.0.0"}
+
 
 @app.get("/")
 async def root():

@@ -1,6 +1,4 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -15,33 +13,19 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     CACHE_TTL_SECONDS: int = 3600
 
-    # Accepts both plain string and JSON array from Render env vars
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
-
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_origins(cls, v):
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            v = v.strip()
-            if not v:
-                return ["http://localhost:3000"]
-            # JSON array format: ["url1","url2"]
-            if v.startswith("["):
-                import json
-                return json.loads(v)
-            # Comma-separated: url1,url2
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    # Plain string — we parse it manually below
+    ALLOWED_ORIGINS: str = "http://localhost:3000"
 
     MODEL_PATH: str = "./ml/models"
-    SUPABASE_URL: str = ""
-    SUPABASE_ANON_KEY: str = ""
 
     class Config:
         env_file = ".env"
         case_sensitive = True
+
+    @property
+    def allowed_origins_list(self) -> list:
+        """Returns ALLOWED_ORIGINS as a list, split by comma."""
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
 
 settings = Settings()
