@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { getDistricts, predictSuitability, getSimilarDistricts, getClimateRisk, getForecast } from "@/lib/api";
+import DataTools from "@/components/DataTools";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
          RadarChart, Radar, PolarGrid, PolarAngleAxis, Area, AreaChart, ReferenceLine } from "recharts";
 
@@ -14,7 +15,7 @@ const VARIETIES: Record<string,string[]> = {
   banana:["Gros Michel","Cavendish"],
 };
 const PROVINCES = ["All","Northern","Southern","Eastern","Western","Kigali City"];
-const TABS = ["Prediction","Similarity","Climate","Forecast"] as const;
+const TABS = ["Prediction","Similarity","Climate","Forecast","Tools"] as const;
 type Tab = typeof TABS[number];
 
 function scoreColor(s:number){return s>=75?"#22c55e":s>=55?"#f59e0b":"#ef4444";}
@@ -160,7 +161,7 @@ export default function Dashboard(){
               className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
                 tab===t?"bg-white border border-b-white border-gray-200 -mb-px text-green-800":"text-gray-500 hover:text-gray-700"
               }`}>
-              {t==="Prediction"?"🌾 Prediction":t==="Similarity"?"🔄 Similarity":t==="Climate"?"🌤 Climate":"📈 Forecast"}
+              {t==="Prediction"?"🌾 Prediction":t==="Similarity"?"🔄 Similarity":t==="Climate"?"🌤 Climate":t==="Forecast"?"📈 Forecast":"🛠 Tools"}
             </button>
           ))}
         </div>
@@ -369,6 +370,21 @@ export default function Dashboard(){
               </div>
             </div>
           </div>
+        )}
+
+        
+        {/* ═══ TOOLS TAB ═══ */}
+        {tab==="Tools"&&(
+          <DataTools
+            districts={districts}
+            currentDistrict={district}
+            currentCrop={crop}
+            currentVariety={variety}
+            prediction={prediction}
+            risk={risk}
+            forecast={forecast}
+            similar={similar}
+          />
         )}
 
         {loading&&<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white rounded-xl p-6 shadow-xl text-sm text-gray-700">🔄 Running AI analysis...</div></div>}
